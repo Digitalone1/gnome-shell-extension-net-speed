@@ -169,17 +169,19 @@ export default class NetSpeed extends Extension {
         const currentInterfaceUpBytes = Number.parseInt(fields[9]);
         if (
           iface === "lo" ||
+          // Created by some Wireguard VPN apps
+          iface.startsWith("wg-") ||
           // Created by python-based bandwidth manager "traffictoll".
-          iface.match(/^ifb[0-9]+/) ||
+          iface.match(/^ifb\d/) ||
           // Created by lxd container manager.
-          iface.match(/^lxdbr[0-9]+/) ||
-          iface.match(/^virbr[0-9]+/) ||
-          iface.match(/^br[0-9]+/) ||
-          iface.match(/^vnet[0-9]+/) ||
-          iface.match(/^tun[0-9]+/) ||
-          iface.match(/^tap[0-9]+/) ||
-          iface.match(/^docker[0-9]+/) ||
-          iface.match(/^utun[0-9]+/) ||
+          iface.match(/^lxdbr\d/) ||
+          iface.match(/^virbr\d/) ||
+          iface.match(/^br\d/) ||
+          iface.match(/^vnet\d/) ||
+          iface.match(/^tun\d/) ||
+          iface.match(/^tap\d/) ||
+          iface.match(/^docker\d/) ||
+          iface.match(/^utun\d/) ||
           iface.startsWith("veth") ||
           isNaN(currentInterfaceDownBytes) ||
           isNaN(currentInterfaceUpBytes)

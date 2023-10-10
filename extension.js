@@ -99,11 +99,15 @@ export default class NetSpeed extends Extension {
     this._textDecoder = new TextDecoder();
     this._lastTotalDownBytes = 0;
     this._lastTotalUpBytes = 0;
+    this._lastTotalDownBits = 0;
+    this._lastTotalUpBits = 0;
   }
 
   enable() {
     this._lastTotalDownBytes = 0;
     this._lastTotalUpBytes = 0;
+    this._lastTotalDownBits = 0;
+    this._lastTotalUpBits = 0;
 
     this._indicator = new Indicator();
     // role, indicator, position, box.
@@ -150,6 +154,8 @@ export default class NetSpeed extends Extension {
       // Caculate the sum of all interfaces line by line.
       let totalDownBytes = 0;
       let totalUpBytes = 0;
+      let totalDownBits = 0;
+      let totalUpBits = 0;
 
       for (let i = 0; i < lines.length; ++i) {
         const fields = lines[i].trim().split(/\W+/);
@@ -183,21 +189,27 @@ export default class NetSpeed extends Extension {
 
         totalDownBytes += currentInterfaceDownBytes;
         totalUpBytes += currentInterfaceUpBytes;
+        totalDownBits += totalDownBytes * 8;
+        totalUpBits += totalUpBytes * 8;
       }
 
       if (this._lastTotalDownBytes === 0) {
         this._lastTotalDownBytes = totalDownBytes;
+        this._lastTotalDownBits = totalDownBits;
       }
       if (this._lastTotalUpBytes === 0) {
         this._lastTotalUpBytes = totalUpBytes;
+        this._lastTotalUpBits = totalUpBits;
       }
 
       speed["down"] =
-        (totalDownBytes - this._lastTotalDownBytes) / refreshInterval;
-      speed["up"] = (totalUpBytes - this._lastTotalUpBytes) / refreshInterval;
+        (totalDownBits - this._lastTotalDownBits) / refreshInterval;
+      speed["up"] = (totalUpBits - this._lastTotalUpBits) / refreshInterval;
 
       this._lastTotalDownBytes = totalDownBytes;
+      this._lastTotalDownBits = totalDownBits;
       this._lastTotalUpBytes = totalUpBytes;
+      this._lastTotalUpBits = totalUpBits;
     } catch (e) {
       console.error(e);
     }

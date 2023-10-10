@@ -24,11 +24,19 @@ import St from "gi://St";
 
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
-import {Extension} from "resource:///org/gnome/shell/extensions/extension.js";
+import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 
 const refreshInterval = 3;
 const speedUnits = [
-  "B/s", "K/s", "M/s", "G/s", "T/s", "P/s", "E/s", "Z/s", "Y/s"
+  "B/s",
+  "K/s",
+  "M/s",
+  "G/s",
+  "T/s",
+  "P/s",
+  "E/s",
+  "Z/s",
+  "Y/s",
 ];
 
 const formatSpeedWithUnit = (amount) => {
@@ -56,7 +64,9 @@ const formatSpeedWithUnit = (amount) => {
 };
 
 const toSpeedString = (speed) => {
-  return `↓ ${formatSpeedWithUnit(speed["down"])} ↑ ${formatSpeedWithUnit(speed["up"])}`;
+  return `↓ ${formatSpeedWithUnit(speed["down"])} ↑ ${formatSpeedWithUnit(
+    speed["up"],
+  )}`;
 };
 
 const Indicator = GObject.registerClass(
@@ -66,8 +76,8 @@ const Indicator = GObject.registerClass(
       super._init(0.0, "Net Speed", true);
 
       this._label = new St.Label({
-        "y_align": Clutter.ActorAlign.CENTER,
-        "text": "---"
+        y_align: Clutter.ActorAlign.CENTER,
+        text: "---",
       });
 
       this.add_child(this._label);
@@ -76,7 +86,8 @@ const Indicator = GObject.registerClass(
     setText(text) {
       return this._label.set_text(text);
     }
-  });
+  },
+);
 
 export default class NetSpeed extends Extension {
   constructor(metadata) {
@@ -100,14 +111,16 @@ export default class NetSpeed extends Extension {
     Main.panel.addToStatusArea(this._uuid, this._indicator, 0, "right");
 
     this._timeout = GLib.timeout_add_seconds(
-      GLib.PRIORITY_DEFAULT, refreshInterval, () => {
+      GLib.PRIORITY_DEFAULT,
+      refreshInterval,
+      () => {
         const speed = this.getCurrentNetSpeed(refreshInterval);
         const text = toSpeedString(speed);
         // console.log(text);
         this._indicator.setText(text);
         // Run as loop, not once.
         return GLib.SOURCE_CONTINUE;
-      }
+      },
     );
   }
 
@@ -123,7 +136,7 @@ export default class NetSpeed extends Extension {
   }
 
   getCurrentNetSpeed(refreshInterval) {
-    const speed = {"down": 0, "up": 0};
+    const speed = { down: 0, up: 0 };
 
     try {
       const inputFile = Gio.File.new_for_path("/proc/net/dev");
@@ -132,7 +145,7 @@ export default class NetSpeed extends Extension {
       //
       // `ByteArray` is deprecated with ES Module, standard JavaScript
       // `TextDecoder` should be used here.
-      const lines = this._textDecoder.decode(content).split('\n');
+      const lines = this._textDecoder.decode(content).split("\n");
 
       // Caculate the sum of all interfaces line by line.
       let totalDownBytes = 0;
@@ -141,29 +154,31 @@ export default class NetSpeed extends Extension {
       for (let i = 0; i < lines.length; ++i) {
         const fields = lines[i].trim().split(/\W+/);
         if (fields.length <= 2) {
-	  continue;
+          continue;
         }
 
         // Skip virtual interfaces.
         const iface = fields[0];
         const currentInterfaceDownBytes = Number.parseInt(fields[1]);
         const currentInterfaceUpBytes = Number.parseInt(fields[9]);
-        if (iface === "lo" ||
-	    // Created by python-based bandwidth manager "traffictoll".
-	    iface.match(/^ifb[0-9]+/) ||
-	    // Created by lxd container manager.
-	    iface.match(/^lxdbr[0-9]+/) ||
-	    iface.match(/^virbr[0-9]+/) ||
-	    iface.match(/^br[0-9]+/) ||
-	    iface.match(/^vnet[0-9]+/) ||
-	    iface.match(/^tun[0-9]+/) ||
-	    iface.match(/^tap[0-9]+/) ||
-	    iface.match(/^docker[0-9]+/) ||
-	    iface.match(/^utun[0-9]+/) ||
-	    iface.startsWith("veth") ||
-	    isNaN(currentInterfaceDownBytes) ||
-	    isNaN(currentInterfaceUpBytes)) {
-	  continue;
+        if (
+          iface === "lo" ||
+          // Created by python-based bandwidth manager "traffictoll".
+          iface.match(/^ifb[0-9]+/) ||
+          // Created by lxd container manager.
+          iface.match(/^lxdbr[0-9]+/) ||
+          iface.match(/^virbr[0-9]+/) ||
+          iface.match(/^br[0-9]+/) ||
+          iface.match(/^vnet[0-9]+/) ||
+          iface.match(/^tun[0-9]+/) ||
+          iface.match(/^tap[0-9]+/) ||
+          iface.match(/^docker[0-9]+/) ||
+          iface.match(/^utun[0-9]+/) ||
+          iface.startsWith("veth") ||
+          isNaN(currentInterfaceDownBytes) ||
+          isNaN(currentInterfaceUpBytes)
+        ) {
+          continue;
         }
 
         totalDownBytes += currentInterfaceDownBytes;
@@ -177,10 +192,9 @@ export default class NetSpeed extends Extension {
         this._lastTotalUpBytes = totalUpBytes;
       }
 
-      speed["down"] = (totalDownBytes - this._lastTotalDownBytes) /
-        refreshInterval;
-      speed["up"] = (totalUpBytes - this._lastTotalUpBytes) /
-        refreshInterval;
+      speed["down"] =
+        (totalDownBytes - this._lastTotalDownBytes) / refreshInterval;
+      speed["up"] = (totalUpBytes - this._lastTotalUpBytes) / refreshInterval;
 
       this._lastTotalDownBytes = totalDownBytes;
       this._lastTotalUpBytes = totalUpBytes;
@@ -190,4 +204,4 @@ export default class NetSpeed extends Extension {
 
     return speed;
   }
-};
+}

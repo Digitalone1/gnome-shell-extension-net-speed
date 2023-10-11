@@ -38,6 +38,29 @@ const speedUnits = [
   "Z/s",
   "Y/s",
 ];
+// `ifb`: Created by python-based bandwidth manager "traffictoll".
+// `lxdbr`: Created by lxd container manager.
+// Add more virtual interface prefixes here.
+const virtualIfacePrefixes = [
+  "lo",
+  "ifb",
+  "lxdbr",
+  "virbr",
+  "br",
+  "vnet",
+  "tun",
+  "tap",
+  "docker",
+  "utun",
+  "wg",
+  "veth",
+];
+
+const isVirtualIface = (name) => {
+  return virtualIfacePrefixes.some((prefix) => {
+    return name.startsWith(prefix);
+  });
+};
 
 const formatSpeedWithUnit = (amount) => {
   let unitIndex = 0;
@@ -168,23 +191,9 @@ export default class NetSpeed extends Extension {
         const currentInterfaceDownBytes = Number.parseInt(fields[1]);
         const currentInterfaceUpBytes = Number.parseInt(fields[9]);
         if (
-          iface === "lo" ||
-          // Created by some Wireguard VPN apps
-          iface.startsWith("wg-") ||
-          // Created by python-based bandwidth manager "traffictoll".
-          iface.match(/^ifb\d/) ||
-          // Created by lxd container manager.
-          iface.match(/^lxdbr\d/) ||
-          iface.match(/^virbr\d/) ||
-          iface.match(/^br\d/) ||
-          iface.match(/^vnet\d/) ||
-          iface.match(/^tun\d/) ||
-          iface.match(/^tap\d/) ||
-          iface.match(/^docker\d/) ||
-          iface.match(/^utun\d/) ||
-          iface.startsWith("veth") ||
           isNaN(currentInterfaceDownBytes) ||
-          isNaN(currentInterfaceUpBytes)
+          isNaN(currentInterfaceUpBytes) ||
+          isVirtualIface(iface)
         ) {
           continue;
         }
